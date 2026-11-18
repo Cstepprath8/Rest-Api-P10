@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crypto Price API – uitleg en testpagina</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7f9; --card: #ffffff; --text: #1c2230; --muted: #5b6475; --line: #dfe3ea;
+    --code-bg: #0f1624; --code-text: #e6edf7;
+    --get: #1b7f4b; --post: #b8620a; --put: #2f5fd0; --delete: #c0392b;
+    --ok: #1b7f4b; --warn: #b8620a; --bad: #c0392b; --accent: #2f5fd0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10141c; --card: #171d29; --text: #e8ecf3; --muted: #9aa4b8; --line: #2a3345;
+      --code-bg: #0a0e16; --code-text: #e6edf7;
+      --get: #47c987; --post: #f0a04b; --put: #7fa2ff; --delete: #ff7a6b;
+      --ok: #47c987; --warn: #f0a04b; --bad: #ff7a6b; --accent: #7fa2ff;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 880px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.7rem; margin: 8px 0 4px; }
+  h2 { font-size: 1.15rem; margin: 0 0 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 18px 0 6px; }
+  p { margin: 6px 0; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin: 16px 0; }
+  .badge { font: 700 .75rem/1 ui-monospace, Consolas, monospace; padding: 5px 8px; border: 1px solid currentColor; border-radius: 6px; }
+  .GET { color: var(--get); } .POST { color: var(--post); } .PUT { color: var(--put); } .DELETE { color: var(--delete); }
+  code.path { font: 600 1rem ui-monospace, Consolas, monospace; }
+  ol { margin: 8px 0 0; padding-left: 22px; }
+  .fields { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0 4px; }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); flex: 1 1 200px; }
+  input { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+          background: var(--bg); color: var(--text); }
+  input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button { font: inherit; font-weight: 600; cursor: pointer; border-radius: 8px; border: 1px solid var(--accent);
+           background: var(--accent); color: #fff; padding: 8px 16px; }
+  @media (prefers-color-scheme: dark) { button.run { color: #0b1020; } }
+  button.copy { background: transparent; color: var(--code-text); border-color: #55607a; padding: 3px 10px; font-size: .8rem; font-weight: 500; }
+  .result { margin-top: 14px; }
+  .status { font-weight: 700; margin-bottom: 6px; }
+  .status.ok { color: var(--ok); } .status.warn { color: var(--warn); } .status.bad { color: var(--bad); }
+  .status small { font-weight: 400; color: var(--muted); }
+  .tablewrap { overflow-x: auto; margin: 8px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; }
+  .codebox { background: var(--code-bg); color: var(--code-text); border-radius: 8px; margin: 6px 0; overflow: hidden; }
+  .codehead { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; font-size: .78rem; color: #9aa4b8; border-bottom: 1px solid #222b3d; }
+  pre { margin: 0; padding: 10px 12px; overflow-x: auto; font: .85rem/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap; word-break: break-all; }
+  .codes td, .codes th { white-space: normal; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Crypto Price API</h1>
+  <p class="sub">Uitleg en testpagina. Hier probeer je elk endpoint uit en kopieer je de bijbehorende commando’s.</p>
+
+  <section class="card">
+    <h2>Zo gebruik je deze pagina</h2>
+    <ol>
+      <li>Deze pagina wordt door de API zelf getoond. De server draait dus al (gestart met <code>npm start</code>).</li>
+      <li>Vul bij een endpoint de velden in en klik op <b>Uitproberen</b>. Je ziet direct de statuscode en het antwoord.</li>
+      <li>Onder elk endpoint staan de commando’s voor curl en PowerShell. Klik op <b>Kopieer</b> en plak ze in je terminal. Ze passen zich aan op wat je invult.</li>
+      <li>Handige volgorde: <b>POST</b> (coin toevoegen), dan <b>GET /watchlist</b>, dan <b>PUT</b> (notitie aanpassen) en tot slot <b>DELETE</b>.</li>
+    </ol>
+  </section>
+
+  <div id="endpoints"></div>
+
+  <section class="card">
+    <h2>Statuscodes</h2>
+    <div class="tablewrap">
+      <table class="codes">
+        <tr><th>Code</th><th>Betekenis</th></tr>
+        <tr><td>200</td><td>Gelukt, het antwoord staat in de body.</td></tr>
+        <tr><td>201</td><td>Gelukt, de coin is aan de watchlist toegevoegd.</td></tr>
+        <tr><td>204</td><td>Gelukt, er is bewust geen body (bij DELETE).</td></tr>
+        <tr><td>400</td><td>Ongeldige invoer, bijvoorbeeld een leeg symbool.</td></tr>
+        <tr><td>404</td><td>Coin onbekend, of niet aanwezig in de watchlist.</td></tr>
+        <tr><td>409</td><td>De coin staat al in de watchlist.</td></tr>
+        <tr><td>502</td><td>CoinGecko is niet bereikbaar of geeft een fout (bijvoorbeeld rate limit). Wacht even en probeer opnieuw.</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <p class="sub">Prijsdata van <a href="https://www.coingecko.com">CoinGecko</a>. De watchlist staat in het geheugen en is leeg na een herstart van de server.</p>
+</main>
+
+<script>
+(function () {
+  var ORIGIN = window.location.origin;
+
+  // Definition of every endpoint shown on this page
+  var endpoints = [
+    { method: "GET", path: "/crypto", title: "Lijst van populaire coins",
+      desc: "Geeft de 10 grootste cryptocurrencies met symbool, naam, prijs in dollars en de verandering in de afgelopen 24 uur. De data komt live van CoinGecko.",
+      fields: [] },
+    { method: "GET", path: "/crypto/{symbol}", title: "Eén coin opvragen",
+      desc: "Vraag één coin op met het symbool, bijvoorbeeld btc of eth. Een onbekend symbool geeft 404.",
+      fields: [{ name: "symbol", label: "Symbool (in het pad)", value: "btc", where: "path", required: true }] },
+    { method: "POST", path: "/crypto", title: "Coin toevoegen aan de watchlist",
+      desc: "Voegt een favoriete coin toe. Het symbool is verplicht, de notitie is optioneel. Staat de coin er al in, dan krijg je 409.",
+      fields: [{ name: "symbol", label: "Symbool (in de body)", value: "btc", where: "body", required: true },
+               { name: "note", label: "Notitie (optioneel)", value: "lang vasthouden", where: "body", required: false }] },
+    { method: "GET", path: "/watchlist", title: "Watchlist bekijken",
+      desc: "Toont alle coins in je watchlist.", fields: [] },
+    { method: "PUT", path: "/crypto/{symbol}", title: "Notitie aanpassen",
+      desc: "Verandert de notitie van een coin die al in je watchlist staat. Staat de coin er niet in, dan krijg je 404.",
+      fields: [{ name: "symbol", label: "Symbool (in het pad)", value: "btc", where: "path", required: true },
+               { name: "note", label: "Nieuwe notitie (in de body)", value: "verkopen boven 70000", where: "body", required: true }] },
+    { method: "DELETE", path: "/crypto/{symbol}", title: "Coin verwijderen",
+      desc: "Haalt een coin uit de watchlist. Bij succes krijg je 204 zonder inhoud.",
+      fields: [{ name: "symbol", label: "Symbool (in het pad)", value: "btc", where: "path", required: true }] }
+  ];
+
+  var STATUS_TEXT = { 200: "OK", 201: "Aangemaakt", 204: "Gelukt, geen inhoud", 400: "Ongeldige invoer",
+                      404: "Niet gevonden", 409: "Staat er al in", 502: "CoinGecko niet bereikbaar" };
+
+  // Build the request (method, path, body) from the current field values
+  function buildRequest(ep, values) {
+    var path = ep.path.replace("{symbol}", encodeURIComponent(values.symbol || ""));
+    var body = null;
+    ep.fields.forEach(function (f) {
+      if (f.where !== "body") return;
+      var v = values[f.name];
+      if (!body) body = {};
+      if (f.required || (v !== undefined && v !== "")) body[f.name] = v === undefined ? "" : v;
+    });
+    return { method: ep.method, path: path, body: body };
+  }
+
+  // Escape a JSON string for use inside single quotes in bash or PowerShell
+  function shEscape(s) { return s.replace(/'/g, "'\\''"); }
+  function psEscape(s) { return s.replace(/'/g, "''"); }
+
+  function curlCommand(req) {
+    var url = ORIGIN + req.path;
+    if (req.body) return "curl -X " + req.method + " " + url + " -H \"Content-Type: application/json\" -d '" + shEscape(JSON.stringify(req.body)) + "'";
+    if (req.method === "GET") return "curl " + url;
+    return "curl -X " + req.method + " " + url + " -i";
+  }
+
+  function psCommand(req) {
+    var url = ORIGIN + req.path;
+    if (req.method === "GET") return "Invoke-RestMethod " + url + " | ConvertTo-Json";
+    var m = req.method.charAt(0) + req.method.slice(1).toLowerCase();
+    if (req.body) return "Invoke-RestMethod -Method " + m + " -Uri " + url + " -ContentType \"application/json\" -Body '" + psEscape(JSON.stringify(req.body)) + "'";
+    return "Invoke-RestMethod -Method " + m + " -Uri " + url;
+  }
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  // Copy text to the clipboard, with a fallback for older browsers
+  function copyText(text, btn) {
+    function done() { btn.textContent = "Gekopieerd ✓"; setTimeout(function () { btn.textContent = "Kopieer"; }, 1500); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+    function fallback() {
+      var t = document.createElement("textarea");
+      t.value = text; document.body.appendChild(t); t.select();
+      try { document.execCommand("copy"); done(); } catch (e) { /* ignore */ }
+      document.body.removeChild(t);
+    }
+  }
+
+  function codeBox(label) {
+    var box = el("div", "codebox");
+    var head = el("div", "codehead");
+    head.appendChild(el("span", "", label));
+    var btn = el("button", "copy", "Kopieer");
+    btn.type = "button";
+    var pre = el("pre");
+    btn.addEventListener("click", function () { copyText(pre.textContent, btn); });
+    head.appendChild(btn); box.appendChild(head); box.appendChild(pre);
+    return { box: box, pre: pre };
+  }
+
+  // Render an array of flat objects as a table
+  function renderTable(rows) {
+    var wrap = el("div", "tablewrap"), table = el("table"), tr = el("tr");
+    var cols = Object.keys(rows[0]);
+    cols.forEach(function (c) { tr.appendChild(el("th", "", c)); });
+    table.appendChild(tr);
+    rows.forEach(function (r) {
+      var row = el("tr");
+      cols.forEach(function (c) { row.appendChild(el("td", "", r[c] === null || r[c] === undefined ? "" : String(r[c]))); });
+      table.appendChild(row);
+    });
+    wrap.appendChild(table);
+    return wrap;
+  }
+
+  function showResult(box, status, text) {
+    box.hidden = false;
+    box.textContent = "";
+    var cls = status >= 500 || status === 0 ? "bad" : status >= 400 ? "warn" : "ok";
+    var line = el("div", "status " + cls, status === 0 ? "Geen verbinding" : String(status));
+    if (status !== 0) line.appendChild(el("small", "", "  " + (STATUS_TEXT[status] || "")));
+    box.appendChild(line);
+
+    var data = null, pretty = text;
+    try { data = JSON.parse(text); pretty = JSON.stringify(data, null, 2); } catch (e) { /* not JSON */ }
+    if (Array.isArray(data) && data.length && typeof data[0] === "object") box.appendChild(renderTable(data));
+    if (Array.isArray(data) && !data.length) box.appendChild(el("p", "", "De lijst is leeg."));
+
+    var out = codeBox("Antwoord (JSON)");
+    out.pre.textContent = pretty || "(geen inhoud)";
+    box.appendChild(out.box);
+  }
+
+  function renderEndpoint(ep) {
+    var card = el("section", "card");
+    var h = el("h2");
+    h.appendChild(el("span", "badge " + ep.method, ep.method));
+    h.appendChild(el("code", "path", ep.path));
+    card.appendChild(h);
+    card.appendChild(el("p", "", ep.title + ". " + ep.desc));
+
+    var fieldsBox = el("div", "fields");
+    var inputs = {};
+    ep.fields.forEach(function (f) {
+      var label = el("label", "", f.label), input = el("input");
+      input.type = "text"; input.value = f.value; input.spellcheck = false;
+      label.appendChild(input); fieldsBox.appendChild(label); inputs[f.name] = input;
+    });
+    if (ep.fields.length) card.appendChild(fieldsBox);
+
+    var run = el("button", "run", "Uitproberen");
+    run.type = "button";
+    card.appendChild(run);
+    var result = el("div", "result"); result.hidden = true;
+    card.appendChild(result);
+
+    card.appendChild(el("h3", "", "Commando’s om te kopiëren"));
+    var curlBox = codeBox("macOS, Linux, Git Bash (curl)");
+    var psBox = codeBox("Windows PowerShell");
+    card.appendChild(curlBox.box); card.appendChild(psBox.box);
+
+    function values() {
+      var v = {};
+      Object.keys(inputs).forEach(function (k) { v[k] = inputs[k].value.trim(); });
+      return v;
+    }
+    function refresh() {
+      var req = buildRequest(ep, values());
+      curlBox.pre.textContent = curlCommand(req);
+      psBox.pre.textContent = psCommand(req);
+    }
+    Object.keys(inputs).forEach(function (k) { inputs[k].addEventListener("input", refresh); });
+    refresh();
+
+    run.addEventListener("click", function () {
+      var req = buildRequest(ep, values());
+      var opts = { method: req.method, headers: {} };
+      if (req.body) { opts.headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(req.body); }
+      run.disabled = true;
+      fetch(req.path, opts).then(function (res) {
+        return res.text().then(function (text) { showResult(result, res.status, text); });
+      }).catch(function () {
+        showResult(result, 0, "{\"error\": \"Server niet bereikbaar. Draait npm start nog?\"}");
+      }).then(function () { run.disabled = false; });
+    });
+    return card;
+  }
+
+  var container = document.getElementById("endpoints");
+  endpoints.forEach(function (ep) { container.appendChild(renderEndpoint(ep)); });
+})();
+</script>
+</body>
+</html>

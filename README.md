@@ -20,6 +20,7 @@ Een kleine REST API die actuele cryptocurrency-prijzen levert en waarmee je een 
 - Lijst van de populairste coins met naam, symbool, prijs (USD) en 24-uurs verandering
 - Actuele prijs van één specifieke coin op basis van het symbool
 - Watchlist met favoriete coins: toevoegen, bekijken, notitie aanpassen en verwijderen
+- Ingebouwde testpagina in de browser: endpoints uitproberen en curl- en PowerShell-commando’s kopiëren
 
 ## Technologie
 
@@ -48,13 +49,13 @@ Start de server:
 npm start
 ```
 
-De API draait nu op `http://localhost:3000`. Probeer het uit:
+De API draait nu op `http://localhost:3000`. Open die link in je browser voor de **testpagina**: daar probeer je elk endpoint uit en kopieer je kant-en-klare commando’s. Of probeer het in de terminal:
 
 ```bash
 curl http://localhost:3000/crypto
 ```
 
-> **Windows PowerShell:** gebruik `curl.exe` in plaats van `curl`. In PowerShell is `curl` een alias voor `Invoke-WebRequest`.
+> **Windows PowerShell:** zie [Voorbeeldverzoeken](#voorbeeldverzoeken) voor commando's die in PowerShell werken.
 
 ## API-referentie
 
@@ -69,13 +70,37 @@ Alle responses zijn JSON. Fouten hebben de vorm `{"error": "omschrijving"}`.
 | PUT | `/crypto/{symbol}` | Pas de notitie van een watchlist-coin aan | 200 |
 | DELETE | `/crypto/{symbol}` | Verwijder een coin uit de watchlist | 204 |
 
-### GET /crypto
+### Voorbeeldverzoeken
 
-Geeft de top 10 coins op marktkapitalisatie.
+Start eerst de server met `npm start` en open een **tweede** terminal.
+
+**macOS, Linux en Git Bash** (curl):
 
 ```bash
 curl http://localhost:3000/crypto
+curl http://localhost:3000/crypto/btc
+curl -X POST http://localhost:3000/crypto -H "Content-Type: application/json" -d '{"symbol":"btc","note":"lang vasthouden"}'
+curl http://localhost:3000/watchlist
+curl -X PUT http://localhost:3000/crypto/btc -H "Content-Type: application/json" -d '{"note":"verkopen boven 70000"}'
+curl -X DELETE http://localhost:3000/crypto/btc -i
 ```
+
+**Windows PowerShell** (`Invoke-RestMethod`):
+
+```powershell
+Invoke-RestMethod http://localhost:3000/crypto | ConvertTo-Json
+Invoke-RestMethod http://localhost:3000/crypto/btc | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri http://localhost:3000/crypto -ContentType "application/json" -Body '{"symbol":"btc","note":"lang vasthouden"}'
+Invoke-RestMethod http://localhost:3000/watchlist | ConvertTo-Json
+Invoke-RestMethod -Method Put -Uri http://localhost:3000/crypto/btc -ContentType "application/json" -Body '{"note":"verkopen boven 70000"}'
+Invoke-RestMethod -Method Delete -Uri http://localhost:3000/crypto/btc
+```
+
+> In Windows PowerShell is `curl` een alias voor `Invoke-WebRequest` en werken de curl-opties (`-X`, `-H`, `-d`) niet. Het quoten van JSON met `curl.exe` is bovendien foutgevoelig. Gebruik daarom `Invoke-RestMethod` zoals hierboven, of [Postman](https://www.postman.com): kies de methode, vul de URL in en plak bij **Body > raw > JSON** de JSON uit de voorbeelden.
+
+### Voorbeeldresponses
+
+**GET /crypto** geeft de top 10 coins op marktkapitalisatie. `price` is in US-dollars, `change` is de procentuele verandering over de afgelopen 24 uur.
 
 ```json
 [
@@ -84,39 +109,19 @@ curl http://localhost:3000/crypto
 ]
 ```
 
-`price` is in US-dollars, `change` is de procentuele verandering over de afgelopen 24 uur.
-
-### GET /crypto/{symbol}
-
-```bash
-curl http://localhost:3000/crypto/btc
-```
+**GET /crypto/{symbol}** werkt niet hoofdlettergevoelig. Een onbekend symbool geeft `404`.
 
 ```json
 { "symbol": "BTC", "name": "Bitcoin", "price": 27000, "change": 2.3 }
 ```
 
-Het symbool is niet hoofdlettergevoelig. Een onbekend symbool geeft `404`.
-
-### POST /crypto
-
-Voegt een coin toe aan de watchlist. `symbol` is verplicht, `note` is optioneel.
-
-```bash
-curl -X POST http://localhost:3000/crypto \
-  -H "Content-Type: application/json" \
-  -d '{"symbol": "btc", "note": "lang vasthouden"}'
-```
+**POST /crypto** verwacht een body met `symbol` (verplicht) en `note` (optioneel).
 
 ```json
 { "symbol": "BTC", "note": "lang vasthouden" }
 ```
 
-### GET /watchlist
-
-```bash
-curl http://localhost:3000/watchlist
-```
+**GET /watchlist**
 
 ```json
 [
@@ -124,27 +129,13 @@ curl http://localhost:3000/watchlist
 ]
 ```
 
-### PUT /crypto/{symbol}
-
-Past de notitie van een coin in de watchlist aan. `note` is verplicht en moet een tekst zijn.
-
-```bash
-curl -X PUT http://localhost:3000/crypto/btc \
-  -H "Content-Type: application/json" \
-  -d '{"note": "verkopen boven 70000"}'
-```
+**PUT /crypto/{symbol}** past de notitie aan. `note` is verplicht en moet een tekst zijn.
 
 ```json
 { "symbol": "BTC", "note": "verkopen boven 70000" }
 ```
 
-### DELETE /crypto/{symbol}
-
-```bash
-curl -X DELETE http://localhost:3000/crypto/btc
-```
-
-Geeft `204 No Content` zonder body.
+**DELETE /crypto/{symbol}** geeft `204 No Content` zonder body.
 
 ### Foutcodes
 
@@ -182,9 +173,12 @@ npx jest --json --outputFile=reports/test-report-vX.Y.Z.json
 │   ├── coingecko.js   # Client voor de CoinGecko API
 │   ├── watchlist.js   # Watchlist in het geheugen
 │   └── server.js      # Startpunt van de server
+├── public/
+│   └── index.html     # Testpagina met uitleg en kopieerbare commando’s
 ├── tests/
 │   ├── crypto.test.js
-│   └── watchlist.test.js
+│   ├── watchlist.test.js
+│   └── ui.test.js
 ├── reports/           # Testrapporten per release
 ├── package.json
 └── README.md
@@ -196,6 +190,7 @@ npx jest --json --outputFile=reports/test-report-vX.Y.Z.json
 |---|---|---|
 | v0.1.0 | `GET /crypto`, `GET /crypto/{symbol}` | [test-report-v0.1.0.json](reports/test-report-v0.1.0.json) |
 | v0.2.0 | Watchlist: `POST`, `GET /watchlist`, `PUT`, `DELETE` | [test-report-v0.2.0.json](reports/test-report-v0.2.0.json) |
+| v0.3.0 | Testpagina in de browser (`GET /`) | [test-report-v0.3.0.json](reports/test-report-v0.3.0.json) |
 
 ## Beperkingen
 

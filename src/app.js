@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 const coingecko = require("./coingecko");
 const watchlist = require("./watchlist");
@@ -5,6 +6,8 @@ const watchlist = require("./watchlist");
 const app = express();
 app.use(express.json());
 
+// Serve the HTML test page from the public folder
+app.use(express.static(path.join(__dirname, "..", "public")));
 // List of popular coins
 app.get("/crypto", async (req, res) => {
   try {
