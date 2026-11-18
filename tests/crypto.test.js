@@ -40,3 +40,17 @@ describe("GET /crypto/:symbol", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("CoinGecko errors", () => {
+  it("returns 502 on GET /crypto when CoinGecko fails", async () => {
+    coingecko.getTopCoins.mockRejectedValue(new Error("boom"));
+    const res = await request(app).get("/crypto");
+    expect(res.status).toBe(502);
+  });
+
+  it("returns 502 on GET /crypto/:symbol when CoinGecko fails", async () => {
+    coingecko.getCoinBySymbol.mockRejectedValue(new Error("boom"));
+    const res = await request(app).get("/crypto/btc");
+    expect(res.status).toBe(502);
+  });
+});

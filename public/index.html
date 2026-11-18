@@ -7,118 +7,142 @@
 <style>
   :root {
     color-scheme: light dark;
-    --bg: #f6f7f9; --card: #ffffff; --text: #1c2230; --muted: #5b6475; --line: #dfe3ea;
+    --bg: #f6f7f9; --card: #ffffff; --text: #1c2230; --muted: #5b6475; --line: #e3e6ec;
     --code-bg: #0f1624; --code-text: #e6edf7;
     --get: #1b7f4b; --post: #b8620a; --put: #2f5fd0; --delete: #c0392b;
-    --ok: #1b7f4b; --warn: #b8620a; --bad: #c0392b; --accent: #2f5fd0;
+    --ok: #1b7f4b; --warn: #b8620a; --bad: #c0392b; --accent: #2f5fd0; --on-accent: #ffffff;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #10141c; --card: #171d29; --text: #e8ecf3; --muted: #9aa4b8; --line: #2a3345;
       --code-bg: #0a0e16; --code-text: #e6edf7;
       --get: #47c987; --post: #f0a04b; --put: #7fa2ff; --delete: #ff7a6b;
-      --ok: #47c987; --warn: #f0a04b; --bad: #ff7a6b; --accent: #7fa2ff;
+      --ok: #47c987; --warn: #f0a04b; --bad: #ff7a6b; --accent: #7fa2ff; --on-accent: #0b1020;
     }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text);
-         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 880px; margin: 0 auto; padding: 24px 16px 64px; }
-  h1 { font-size: 1.7rem; margin: 8px 0 4px; }
-  h2 { font-size: 1.15rem; margin: 0 0 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 18px 0 6px; }
-  p { margin: 6px 0; }
-  .sub { color: var(--muted); margin: 0 0 20px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin: 16px 0; }
-  .badge { font: 700 .75rem/1 ui-monospace, Consolas, monospace; padding: 5px 8px; border: 1px solid currentColor; border-radius: 6px; }
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.6rem; margin: 0 0 6px; }
+  .intro { color: var(--muted); margin: 0; }
+  .group { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+           font-weight: 600; margin: 32px 0 8px 2px; }
+  .list { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  details.ep + details.ep { border-top: 1px solid var(--line); }
+
+  summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+  summary::-webkit-details-marker { display: none; }
+  summary:hover { background: color-mix(in srgb, var(--text) 4%, transparent); }
+  summary:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .ep > summary::after { content: "›"; color: var(--muted); font-size: 1.3rem; line-height: 1; transition: transform .15s; }
+  .ep[open] > summary::after { transform: rotate(90deg); }
+  .badge { min-width: 4.2rem; text-align: center; font: 700 .72rem/1 ui-monospace, Consolas, monospace;
+           padding: 6px 0; border: 1px solid currentColor; border-radius: 6px; }
   .GET { color: var(--get); } .POST { color: var(--post); } .PUT { color: var(--put); } .DELETE { color: var(--delete); }
-  code.path { font: 600 1rem ui-monospace, Consolas, monospace; }
-  ol { margin: 8px 0 0; padding-left: 22px; }
-  .fields { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0 4px; }
-  label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); flex: 1 1 200px; }
+  .path { font: 600 .95rem ui-monospace, Consolas, monospace; }
+  .title { color: var(--muted); font-size: .9rem; margin-left: auto; text-align: right; }
+
+  .body { padding: 2px 16px 18px; }
+  .desc { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: var(--muted); flex: 1 1 150px; }
   input { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
           background: var(--bg); color: var(--text); }
-  input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  button { font: inherit; font-weight: 600; cursor: pointer; border-radius: 8px; border: 1px solid var(--accent);
-           background: var(--accent); color: #fff; padding: 8px 16px; }
-  @media (prefers-color-scheme: dark) { button.run { color: #0b1020; } }
-  button.copy { background: transparent; color: var(--code-text); border-color: #55607a; padding: 3px 10px; font-size: .8rem; font-weight: 500; }
-  .result { margin-top: 14px; }
-  .status { font-weight: 700; margin-bottom: 6px; }
+  button { font: inherit; cursor: pointer; }
+  .run { font-weight: 600; border-radius: 8px; border: 0; background: var(--accent); color: var(--on-accent); padding: 9px 18px; }
+  .run:disabled { opacity: .6; cursor: wait; }
+
+  .result { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); }
+  .status { font-weight: 700; margin-bottom: 8px; }
   .status.ok { color: var(--ok); } .status.warn { color: var(--warn); } .status.bad { color: var(--bad); }
   .status small { font-weight: 400; color: var(--muted); }
-  .tablewrap { overflow-x: auto; margin: 8px 0; }
-  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
-  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .muted { color: var(--muted); margin: 4px 0; }
+  .tablewrap { overflow-x: auto; margin: 4px 0 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { text-align: left; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
   th { color: var(--muted); font-weight: 600; }
-  .codebox { background: var(--code-bg); color: var(--code-text); border-radius: 8px; margin: 6px 0; overflow: hidden; }
-  .codehead { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; font-size: .78rem; color: #9aa4b8; border-bottom: 1px solid #222b3d; }
-  pre { margin: 0; padding: 10px 12px; overflow-x: auto; font: .85rem/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap; word-break: break-all; }
+  .raw > summary { padding: 4px 0; font-size: .85rem; color: var(--muted); display: list-item; list-style: revert; }
+  .raw > summary::after { content: none; }
+  .raw > summary:hover { background: none; }
+
+  .cmd { margin-top: 16px; }
+  .cmdhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .cmdhead span.lbl { font-size: .8rem; color: var(--muted); }
+  .tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .tabs button { background: transparent; color: var(--muted); border: 0; padding: 4px 12px; font-size: .8rem; }
+  .tabs button[aria-selected="true"] { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+  .codebox { background: var(--code-bg); color: var(--code-text); border-radius: 8px; position: relative; }
+  .codebox .copy { position: absolute; top: 6px; right: 6px; background: #222b3d; color: #c9d3e6;
+                   border: 0; border-radius: 6px; padding: 3px 10px; font-size: .75rem; }
+  pre { margin: 0; padding: 12px 70px 12px 12px; overflow-x: auto; font: .82rem/1.5 ui-monospace, Consolas, monospace;
+        white-space: pre-wrap; word-break: break-all; }
+
+  .codes { margin-top: 32px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .codes > summary { color: var(--muted); font-size: .9rem; }
+  .codes table { margin: 0 16px 14px; width: calc(100% - 32px); }
   .codes td, .codes th { white-space: normal; }
+  .foot { color: var(--muted); font-size: .82rem; margin-top: 28px; }
   [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <main>
   <h1>Crypto Price API</h1>
-  <p class="sub">Uitleg en testpagina. Hier probeer je elk endpoint uit en kopieer je de bijbehorende commando’s.</p>
-
-  <section class="card">
-    <h2>Zo gebruik je deze pagina</h2>
-    <ol>
-      <li>Deze pagina wordt door de API zelf getoond. De server draait dus al (gestart met <code>npm start</code>).</li>
-      <li>Vul bij een endpoint de velden in en klik op <b>Uitproberen</b>. Je ziet direct de statuscode en het antwoord.</li>
-      <li>Onder elk endpoint staan de commando’s voor curl en PowerShell. Klik op <b>Kopieer</b> en plak ze in je terminal. Ze passen zich aan op wat je invult.</li>
-      <li>Handige volgorde: <b>POST</b> (coin toevoegen), dan <b>GET /watchlist</b>, dan <b>PUT</b> (notitie aanpassen) en tot slot <b>DELETE</b>.</li>
-    </ol>
-  </section>
+  <p class="intro">Klik een endpoint open, vul de velden in en kies <b>Uitproberen</b>. Onder het resultaat staat het commando om te kopiëren.
+    Tip: probeer de volgorde POST, GET /watchlist, PUT, DELETE.</p>
 
   <div id="endpoints"></div>
 
-  <section class="card">
-    <h2>Statuscodes</h2>
-    <div class="tablewrap">
-      <table class="codes">
-        <tr><th>Code</th><th>Betekenis</th></tr>
-        <tr><td>200</td><td>Gelukt, het antwoord staat in de body.</td></tr>
-        <tr><td>201</td><td>Gelukt, de coin is aan de watchlist toegevoegd.</td></tr>
-        <tr><td>204</td><td>Gelukt, er is bewust geen body (bij DELETE).</td></tr>
-        <tr><td>400</td><td>Ongeldige invoer, bijvoorbeeld een leeg symbool.</td></tr>
-        <tr><td>404</td><td>Coin onbekend, of niet aanwezig in de watchlist.</td></tr>
-        <tr><td>409</td><td>De coin staat al in de watchlist.</td></tr>
-        <tr><td>502</td><td>CoinGecko is niet bereikbaar of geeft een fout (bijvoorbeeld rate limit). Wacht even en probeer opnieuw.</td></tr>
-      </table>
-    </div>
-  </section>
+  <details class="codes">
+    <summary>Statuscodes uitgelegd</summary>
+    <table>
+      <tr><th>Code</th><th>Betekenis</th></tr>
+      <tr><td>200</td><td>Gelukt, het antwoord staat in de body.</td></tr>
+      <tr><td>201</td><td>Gelukt, de coin is aan de watchlist toegevoegd.</td></tr>
+      <tr><td>204</td><td>Gelukt, er is bewust geen body (bij DELETE).</td></tr>
+      <tr><td>400</td><td>Ongeldige invoer, bijvoorbeeld een leeg symbool.</td></tr>
+      <tr><td>404</td><td>Coin onbekend, of niet aanwezig in de watchlist.</td></tr>
+      <tr><td>409</td><td>De coin staat al in de watchlist.</td></tr>
+      <tr><td>502</td><td>CoinGecko is niet bereikbaar of geeft een fout (bijvoorbeeld rate limit). Wacht even en probeer opnieuw.</td></tr>
+    </table>
+  </details>
 
-  <p class="sub">Prijsdata van <a href="https://www.coingecko.com">CoinGecko</a>. De watchlist staat in het geheugen en is leeg na een herstart van de server.</p>
+  <p class="foot">Prijsdata van <a href="https://www.coingecko.com">CoinGecko</a>. De watchlist staat in het geheugen en is leeg na een herstart van de server.</p>
 </main>
 
 <script>
 (function () {
   var ORIGIN = window.location.origin;
+  // Default to the shell that fits the visitor's system
+  var shell = /Windows/i.test(navigator.userAgent) ? "ps" : "curl";
+  var refreshers = [];
 
   // Definition of every endpoint shown on this page
-  var endpoints = [
-    { method: "GET", path: "/crypto", title: "Lijst van populaire coins",
-      desc: "Geeft de 10 grootste cryptocurrencies met symbool, naam, prijs in dollars en de verandering in de afgelopen 24 uur. De data komt live van CoinGecko.",
-      fields: [] },
-    { method: "GET", path: "/crypto/{symbol}", title: "Eén coin opvragen",
-      desc: "Vraag één coin op met het symbool, bijvoorbeeld btc of eth. Een onbekend symbool geeft 404.",
-      fields: [{ name: "symbol", label: "Symbool (in het pad)", value: "btc", where: "path", required: true }] },
-    { method: "POST", path: "/crypto", title: "Coin toevoegen aan de watchlist",
-      desc: "Voegt een favoriete coin toe. Het symbool is verplicht, de notitie is optioneel. Staat de coin er al in, dan krijg je 409.",
-      fields: [{ name: "symbol", label: "Symbool (in de body)", value: "btc", where: "body", required: true },
-               { name: "note", label: "Notitie (optioneel)", value: "lang vasthouden", where: "body", required: false }] },
-    { method: "GET", path: "/watchlist", title: "Watchlist bekijken",
-      desc: "Toont alle coins in je watchlist.", fields: [] },
-    { method: "PUT", path: "/crypto/{symbol}", title: "Notitie aanpassen",
-      desc: "Verandert de notitie van een coin die al in je watchlist staat. Staat de coin er niet in, dan krijg je 404.",
-      fields: [{ name: "symbol", label: "Symbool (in het pad)", value: "btc", where: "path", required: true },
-               { name: "note", label: "Nieuwe notitie (in de body)", value: "verkopen boven 70000", where: "body", required: true }] },
-    { method: "DELETE", path: "/crypto/{symbol}", title: "Coin verwijderen",
-      desc: "Haalt een coin uit de watchlist. Bij succes krijg je 204 zonder inhoud.",
-      fields: [{ name: "symbol", label: "Symbool (in het pad)", value: "btc", where: "path", required: true }] }
+  var groups = [
+    { name: "Prijzen", items: [
+      { method: "GET", path: "/crypto", title: "Lijst van populaire coins",
+        desc: "Geeft de 10 grootste cryptocurrencies met symbool, naam, prijs in dollars en de verandering in de afgelopen 24 uur. De data komt live van CoinGecko.",
+        fields: [] },
+      { method: "GET", path: "/crypto/{symbol}", title: "Eén coin opvragen",
+        desc: "Vraag één coin op met het symbool, bijvoorbeeld btc of eth. Een onbekend symbool geeft 404.",
+        fields: [{ name: "symbol", label: "Symbool", value: "btc", where: "path", required: true }] }
+    ]},
+    { name: "Watchlist", items: [
+      { method: "POST", path: "/crypto", title: "Coin toevoegen",
+        desc: "Voegt een favoriete coin toe. Het symbool is verplicht, de notitie is optioneel. Staat de coin er al in, dan krijg je 409.",
+        fields: [{ name: "symbol", label: "Symbool", value: "btc", where: "body", required: true },
+                 { name: "note", label: "Notitie (optioneel)", value: "lang vasthouden", where: "body", required: false }] },
+      { method: "GET", path: "/watchlist", title: "Watchlist bekijken",
+        desc: "Toont alle coins in je watchlist.", fields: [] },
+      { method: "PUT", path: "/crypto/{symbol}", title: "Notitie aanpassen",
+        desc: "Verandert de notitie van een coin die al in je watchlist staat. Staat de coin er niet in, dan krijg je 404.",
+        fields: [{ name: "symbol", label: "Symbool", value: "btc", where: "path", required: true },
+                 { name: "note", label: "Nieuwe notitie", value: "verkopen boven 70000", where: "body", required: true }] },
+      { method: "DELETE", path: "/crypto/{symbol}", title: "Coin verwijderen",
+        desc: "Haalt een coin uit de watchlist. Bij succes krijg je 204 zonder inhoud.",
+        fields: [{ name: "symbol", label: "Symbool", value: "btc", where: "path", required: true }] }
+    ]}
   ];
 
   var STATUS_TEXT = { 200: "OK", 201: "Aangemaakt", 204: "Gelukt, geen inhoud", 400: "Ongeldige invoer",
@@ -166,26 +190,25 @@
   // Copy text to the clipboard, with a fallback for older browsers
   function copyText(text, btn) {
     function done() { btn.textContent = "Gekopieerd ✓"; setTimeout(function () { btn.textContent = "Kopieer"; }, 1500); }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done, fallback);
-    } else { fallback(); }
     function fallback() {
       var t = document.createElement("textarea");
       t.value = text; document.body.appendChild(t); t.select();
       try { document.execCommand("copy"); done(); } catch (e) { /* ignore */ }
       document.body.removeChild(t);
     }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
   }
 
-  function codeBox(label) {
+  // Dark code block with a copy button in the corner
+  function codeBox() {
     var box = el("div", "codebox");
-    var head = el("div", "codehead");
-    head.appendChild(el("span", "", label));
     var btn = el("button", "copy", "Kopieer");
     btn.type = "button";
     var pre = el("pre");
     btn.addEventListener("click", function () { copyText(pre.textContent, btn); });
-    head.appendChild(btn); box.appendChild(head); box.appendChild(pre);
+    box.appendChild(btn); box.appendChild(pre);
     return { box: box, pre: pre };
   }
 
@@ -214,41 +237,61 @@
 
     var data = null, pretty = text;
     try { data = JSON.parse(text); pretty = JSON.stringify(data, null, 2); } catch (e) { /* not JSON */ }
-    if (Array.isArray(data) && data.length && typeof data[0] === "object") box.appendChild(renderTable(data));
-    if (Array.isArray(data) && !data.length) box.appendChild(el("p", "", "De lijst is leeg."));
+    var hasTable = Array.isArray(data) && data.length && typeof data[0] === "object";
+    if (hasTable) box.appendChild(renderTable(data));
+    else if (Array.isArray(data)) box.appendChild(el("p", "muted", "De lijst is leeg."));
 
-    var out = codeBox("Antwoord (JSON)");
-    out.pre.textContent = pretty || "(geen inhoud)";
-    box.appendChild(out.box);
+    // Raw JSON: collapsed when a table already shows the data, skipped when there is no body
+    if (pretty) {
+      var raw = el("details", "raw");
+      raw.appendChild(el("summary", "", "JSON tonen"));
+      var out = codeBox();
+      out.pre.textContent = pretty;
+      raw.appendChild(out.box);
+      raw.open = !hasTable;
+      box.appendChild(raw);
+    }
   }
 
-  function renderEndpoint(ep) {
-    var card = el("section", "card");
-    var h = el("h2");
-    h.appendChild(el("span", "badge " + ep.method, ep.method));
-    h.appendChild(el("code", "path", ep.path));
-    card.appendChild(h);
-    card.appendChild(el("p", "", ep.title + ". " + ep.desc));
+  function renderEndpoint(ep, open) {
+    var d = el("details", "ep");
+    d.open = open;
+    var sum = el("summary");
+    sum.appendChild(el("span", "badge " + ep.method, ep.method));
+    sum.appendChild(el("span", "path", ep.path));
+    sum.appendChild(el("span", "title", ep.title));
+    d.appendChild(sum);
 
-    var fieldsBox = el("div", "fields");
+    var body = el("div", "body");
+    body.appendChild(el("p", "desc", ep.desc));
+
+    var controls = el("div", "controls");
     var inputs = {};
     ep.fields.forEach(function (f) {
       var label = el("label", "", f.label), input = el("input");
       input.type = "text"; input.value = f.value; input.spellcheck = false;
-      label.appendChild(input); fieldsBox.appendChild(label); inputs[f.name] = input;
+      label.appendChild(input); controls.appendChild(label); inputs[f.name] = input;
     });
-    if (ep.fields.length) card.appendChild(fieldsBox);
-
     var run = el("button", "run", "Uitproberen");
     run.type = "button";
-    card.appendChild(run);
-    var result = el("div", "result"); result.hidden = true;
-    card.appendChild(result);
+    controls.appendChild(run);
+    body.appendChild(controls);
 
-    card.appendChild(el("h3", "", "Commando’s om te kopiëren"));
-    var curlBox = codeBox("macOS, Linux, Git Bash (curl)");
-    var psBox = codeBox("Windows PowerShell");
-    card.appendChild(curlBox.box); card.appendChild(psBox.box);
+    var result = el("div", "result"); result.hidden = true;
+    body.appendChild(result);
+
+    // Command section: one code box, switch between curl and PowerShell
+    var cmd = el("div", "cmd");
+    var head = el("div", "cmdhead");
+    var lbl = el("span", "lbl");
+    var tabs = el("div", "tabs"); tabs.setAttribute("role", "tablist");
+    var tabCurl = el("button", "", "curl"), tabPs = el("button", "", "PowerShell");
+    [tabCurl, tabPs].forEach(function (t) { t.type = "button"; t.setAttribute("role", "tab"); tabs.appendChild(t); });
+    head.appendChild(lbl); head.appendChild(tabs);
+    var code = codeBox();
+    cmd.appendChild(head); cmd.appendChild(code.box);
+    body.appendChild(cmd);
+    d.appendChild(body);
 
     function values() {
       var v = {};
@@ -257,9 +300,14 @@
     }
     function refresh() {
       var req = buildRequest(ep, values());
-      curlBox.pre.textContent = curlCommand(req);
-      psBox.pre.textContent = psCommand(req);
+      code.pre.textContent = shell === "ps" ? psCommand(req) : curlCommand(req);
+      lbl.textContent = shell === "ps" ? "Commando voor Windows PowerShell" : "Commando voor macOS, Linux, Git Bash";
+      tabCurl.setAttribute("aria-selected", String(shell === "curl"));
+      tabPs.setAttribute("aria-selected", String(shell === "ps"));
     }
+    refreshers.push(refresh);
+    tabCurl.addEventListener("click", function () { shell = "curl"; refreshers.forEach(function (r) { r(); }); });
+    tabPs.addEventListener("click", function () { shell = "ps"; refreshers.forEach(function (r) { r(); }); });
     Object.keys(inputs).forEach(function (k) { inputs[k].addEventListener("input", refresh); });
     refresh();
 
@@ -274,11 +322,17 @@
         showResult(result, 0, "{\"error\": \"Server niet bereikbaar. Draait npm start nog?\"}");
       }).then(function () { run.disabled = false; });
     });
-    return card;
+    return d;
   }
 
   var container = document.getElementById("endpoints");
-  endpoints.forEach(function (ep) { container.appendChild(renderEndpoint(ep)); });
+  var first = true;
+  groups.forEach(function (g) {
+    container.appendChild(el("h2", "group", g.name));
+    var list = el("div", "list");
+    g.items.forEach(function (ep) { list.appendChild(renderEndpoint(ep, first)); first = false; });
+    container.appendChild(list);
+  });
 })();
 </script>
 </body>
