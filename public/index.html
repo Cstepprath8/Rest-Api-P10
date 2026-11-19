@@ -59,6 +59,9 @@
   .status small { font-weight: 400; color: var(--muted); }
   .muted { color: var(--muted); margin: 4px 0; }
   .tablewrap { overflow-x: auto; margin: 4px 0 10px; }
+  .tablewrap.tall { max-height: 320px; overflow: auto; }
+  .summary { font-weight: 600; margin: 4px 0 8px; }
+  .summary.ok { color: var(--ok); } .summary.bad { color: var(--bad); }
   table { border-collapse: collapse; width: 100%; font-size: .9rem; }
   th, td { text-align: left; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
   th { color: var(--muted); font-weight: 600; }
@@ -90,7 +93,7 @@
 <main>
   <h1>Crypto Price API</h1>
   <p class="intro">Klik een endpoint open, vul de velden in en kies <b>Uitproberen</b>. Onder het resultaat staat het commando om te kopiëren.
-    Tip: probeer de volgorde POST, GET /watchlist, PUT, DELETE.</p>
+    Tip: probeer de volgorde POST, GET /watchlist, PUT, DELETE. Onderaan kun je alle tests van dit project uitvoeren.</p>
 
   <div id="endpoints"></div>
 
@@ -142,11 +145,16 @@
       { method: "DELETE", path: "/crypto/{symbol}", title: "Coin verwijderen",
         desc: "Haalt een coin uit de watchlist. Bij succes krijg je 204 zonder inhoud.",
         fields: [{ name: "symbol", label: "Symbool", value: "btc", where: "path", required: true }] }
+    ]},
+    { name: "Tests", items: [
+      { method: "POST", path: "/tests/run", title: "Alle tests uitvoeren", runLabel: "Tests uitvoeren", pipeJson: true,
+        desc: "Draait alle tests van dit project en toont per test of hij geslaagd is. Dit duurt een paar seconden. Deze functie is uitgeschakeld wanneer de server in productie draait.",
+        fields: [] }
     ]}
   ];
 
   var STATUS_TEXT = { 200: "OK", 201: "Aangemaakt", 204: "Gelukt, geen inhoud", 400: "Ongeldige invoer",
-                      404: "Niet gevonden", 409: "Staat er al in", 502: "CoinGecko niet bereikbaar" };
+                      403: "Niet toegestaan", 404: "Niet gevonden", 409: "Staat er al in", 500: "Serverfout", 502: "CoinGecko niet bereikbaar" };
 
   // Build the request (method, path, body) from the current field values
   function buildRequest(ep, values) {
@@ -158,7 +166,7 @@
       if (!body) body = {};
       if (f.required || (v !== undefined && v !== "")) body[f.name] = v === undefined ? "" : v;
     });
-    return { method: ep.method, path: path, body: body };
+    return { method: ep.method, path: path, body: body, pipeJson: !!ep.pipeJson };
   }
 
   // Escape a JSON string for use inside single quotes in bash or PowerShell
@@ -177,7 +185,7 @@
     if (req.method === "GET") return "Invoke-RestMethod " + url + " | ConvertTo-Json";
     var m = req.method.charAt(0) + req.method.slice(1).toLowerCase();
     if (req.body) return "Invoke-RestMethod -Method " + m + " -Uri " + url + " -ContentType \"application/json\" -Body '" + psEscape(JSON.stringify(req.body)) + "'";
-    return "Invoke-RestMethod -Method " + m + " -Uri " + url;
+    return "Invoke-RestMethod -Method " + m + " -Uri " + url + (req.pipeJson ? " | ConvertTo-Json -Depth 4" : "");
   }
 
   function el(tag, cls, text) {
@@ -237,9 +245,22 @@
 
     var data = null, pretty = text;
     try { data = JSON.parse(text); pretty = JSON.stringify(data, null, 2); } catch (e) { /* not JSON */ }
-    var hasTable = Array.isArray(data) && data.length && typeof data[0] === "object";
-    if (hasTable) box.appendChild(renderTable(data));
-    else if (Array.isArray(data)) box.appendChild(el("p", "muted", "De lijst is leeg."));
+    var isRun = !!data && !Array.isArray(data) && Array.isArray(data.tests);
+    var hasTable = isRun || (Array.isArray(data) && data.length > 0 && typeof data[0] === "object");
+    if (isRun) {
+      box.appendChild(el("p", "summary " + (data.failed ? "bad" : "ok"),
+        data.passed + " geslaagd, " + data.failed + " gefaald (" + data.total + " totaal) in " + (data.durationMs / 1000).toFixed(1) + " s"));
+      var rows = data.tests.map(function (t) {
+        return { status: t.status === "passed" ? "✓ geslaagd" : "✗ " + t.status, bestand: t.suite, test: t.name };
+      });
+      var tw = renderTable(rows);
+      tw.className += " tall";
+      box.appendChild(tw);
+    } else if (hasTable) {
+      box.appendChild(renderTable(data));
+    } else if (Array.isArray(data)) {
+      box.appendChild(el("p", "muted", "De lijst is leeg."));
+    }
 
     // Raw JSON: collapsed when a table already shows the data, skipped when there is no body
     if (pretty) {
@@ -272,7 +293,7 @@
       input.type = "text"; input.value = f.value; input.spellcheck = false;
       label.appendChild(input); controls.appendChild(label); inputs[f.name] = input;
     });
-    var run = el("button", "run", "Uitproberen");
+    var run = el("button", "run", ep.runLabel || "Uitproberen");
     run.type = "button";
     controls.appendChild(run);
     body.appendChild(controls);
@@ -316,11 +337,12 @@
       var opts = { method: req.method, headers: {} };
       if (req.body) { opts.headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(req.body); }
       run.disabled = true;
+      run.textContent = "Bezig…";
       fetch(req.path, opts).then(function (res) {
         return res.text().then(function (text) { showResult(result, res.status, text); });
       }).catch(function () {
         showResult(result, 0, "{\"error\": \"Server niet bereikbaar. Draait npm start nog?\"}");
-      }).then(function () { run.disabled = false; });
+      }).then(function () { run.disabled = false; run.textContent = ep.runLabel || "Uitproberen"; });
     });
     return d;
   }
