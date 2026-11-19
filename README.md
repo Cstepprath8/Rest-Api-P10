@@ -305,4 +305,4 @@ Prijsdata is afkomstig van [CoinGecko](https://www.coingecko.com).
 
 ## Auteur
 
-[JOUW NAAM] — schoolopdracht REST API
+Colin Stepprath - schoolopdracht REST API
