@@ -1,0 +1,2 @@
+node scripts/test-report.js
+git add reports/commits || true
