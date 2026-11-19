@@ -2,12 +2,14 @@ const path = require("path");
 const express = require("express");
 const coingecko = require("./coingecko");
 const watchlist = require("./watchlist");
+const testRunner = require("./testrunner");
 
 const app = express();
 app.use(express.json());
 
 // Serve the HTML test page from the public folder
 app.use(express.static(path.join(__dirname, "..", "public")));
+
 // List of popular coins
 app.get("/crypto", async (req, res) => {
   try {
@@ -69,6 +71,18 @@ app.delete("/crypto/:symbol", (req, res) => {
     return res.status(404).json({ error: "Coin is not in the watchlist" });
   }
   res.status(204).end();
+});
+
+// Run the test suite (disabled in production)
+app.post("/tests/run", async (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({ error: "The test runner is disabled in production" });
+  }
+  try {
+    res.json(await testRunner.runTests());
+  } catch (err) {
+    res.status(500).json({ error: "Could not run the tests" });
+  }
 });
 
 module.exports = app;
